@@ -5,22 +5,26 @@
   <link href="../common/jquery-ui-1.12.1.custom/jquery-ui.min.css" rel="stylesheet"/>
   <link href="../common/jquery-ui-1.12.1.custom/jquery-ui.theme.min.css" rel="stylesheet"/>
   <style>
-    canvas {
-      width: 400px;
-      height: 400px;
+    #sliders {
+      display: inline-block;
+      margin-left: 2em;
+      vertical-align: top;
     }
     .slider {
-      margin-top: 1em;
-      width: 320px;
+      margin-bottom: 1em;
+      width: 300px;
     }
   </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
-  <div id="sslider" class="slider"></div>
-  <div id="xslider" class="slider"></div>
-  <div id="yslider" class="slider"></div>
-  <div id="zslider" class="slider"></div>
+  <canvas id="c" width="500" height="500"></canvas>
+  <div id="sliders">
+    <div id="sslider" class="slider"></div>
+    <div id="pslider" class="slider"></div>
+    <div id="xslider" class="slider"></div>
+    <div id="yslider" class="slider"></div>
+    <div id="zslider" class="slider"></div>
+  </div>
   <script id="vertex-shader-3d" type="x-shader/x-vertex">
   attribute vec3 a_position;
   uniform mat4 u_transform;

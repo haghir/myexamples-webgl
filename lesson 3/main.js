@@ -27,21 +27,13 @@ function createProgram(gl, vertexShader, fragmentShader) {
     return program;
 }
 
-function draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, matrix) {
+function draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, matrix, pointSize) {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.vertexAttribPointer(
-        positionAttributeLocation,
-        3,        // 3 components per iteration
-        gl.FLOAT, // the data is 32bit floats
-        false,    // don't normalize the data
-        0,        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        0         // start at the beginning of the buffer
-    );
+    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
     gl.uniformMatrix4fv(transformLocation, false, matrix);
-    gl.uniform1f(pointSizeLocation, 2.5);
-    gl.drawArrays(gl.POINTS, 24, 7 * 16 + 2);
-    gl.uniform1f(pointSizeLocation, 0.1);
+    gl.uniform1f(pointSizeLocation, pointSize);
     gl.drawArrays(gl.LINES, 0, 24);
+    gl.drawArrays(gl.POINTS, 24, 15 * 32 + 2);
 }
 
 function cube() {
@@ -62,20 +54,23 @@ function cube() {
 }
 
 function sphere() {
-    let ret = Array((7 * 16 + 2) * 3);
-    for (let i = 0; i < 16; ++i)
-        for (let j = 1; j < 8; ++j) {
-            let r = Math.sin(Math.PI * j / 8);
-            ret[(7 * i + j - 1) * 3 + 0] = Math.cos(Math.PI * i / 8) * r;
-            ret[(7 * i + j - 1) * 3 + 1] = Math.sin(Math.PI * i / 8) * r;
-            ret[(7 * i + j - 1) * 3 + 2] = Math.cos(Math.PI * j / 8);
+    const res = 32;
+    const half = res / 2;
+    const size = (half - 1) * res + 2;
+    let ret = Array(size * 3);
+    for (let i = 0; i < res; ++i)
+        for (let j = 1; j < half; ++j) {
+            let r = Math.sin(Math.PI * j / half);
+            ret[((half - 1) * i + j - 1) * 3 + 0] = Math.cos(Math.PI * i / half) * r;
+            ret[((half - 1) * i + j - 1) * 3 + 1] = Math.sin(Math.PI * i / half) * r;
+            ret[((half - 1) * i + j - 1) * 3 + 2] = Math.cos(Math.PI * j / half);
         }
-    ret[(7 * 16 + 2) * 3 - 6] = 0;
-    ret[(7 * 16 + 2) * 3 - 5] = 0;
-    ret[(7 * 16 + 2) * 3 - 4] = 1;
-    ret[(7 * 16 + 2) * 3 - 3] = 0;
-    ret[(7 * 16 + 2) * 3 - 2] = 0;
-    ret[(7 * 16 + 2) * 3 - 1] = -1;
+    ret[size * 3 - 6] = 0;
+    ret[size * 3 - 5] = 0;
+    ret[size * 3 - 4] = 1;
+    ret[size * 3 - 3] = 0;
+    ret[size * 3 - 2] = 0;
+    ret[size * 3 - 1] = -1;
     return ret;
 }
 
@@ -131,8 +126,9 @@ window.onload =  function() {
     gl.enableVertexAttribArray(positionAttributeLocation);
 
     let s = 0.5;
-    let x = 0;
-    let y = 0;
+    let p = 5;
+    let x = Math.PI * 20 / 50;
+    let y = Math.PI * 10 / 50;
     let z = 0;
     function onslide() {
         let scale = [
@@ -164,7 +160,7 @@ window.onload =  function() {
         tr = multiply4(rx, tr);
         tr = multiply4(ry, tr);
         tr = multiply4(rz, tr);
-        draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, tr);
+        draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, tr, p);
     }
 
     onslide();
@@ -181,7 +177,20 @@ window.onload =  function() {
         }
     });
 
+    $("#pslider").slider({
+        value: 50,
+        slide: function(e, ui) {
+            p = ui.value / 10;
+            onslide();
+        },
+        stop: function(e, ui) {
+            p = ui.value / 10;
+            onslide();
+        }
+    });
+
     $("#xslider").slider({
+        value: 20,
         slide: function(e, ui) {
             x = Math.PI * ui.value / 50;
             onslide();
@@ -193,6 +202,7 @@ window.onload =  function() {
     });
 
     $("#yslider").slider({
+        value: 10,
         slide: function(e, ui) {
             y = Math.PI * ui.value / 50;
             onslide();
