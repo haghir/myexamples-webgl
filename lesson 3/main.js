@@ -130,6 +130,8 @@ window.onload =  function() {
     let x = Math.PI * 20 / 50;
     let y = Math.PI * 10 / 50;
     let z = 0;
+    let h = 0;
+    let v = 0;
     function onslide() {
         let scale = [
             s, 0, 0, 0,
@@ -155,72 +157,96 @@ window.onload =  function() {
             0, 0, 1, 0,
             0, 0, 0, 1,
         ];
+        let move = [
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            h, v, 0, 1,
+        ];
         let tr = id4();
         tr = multiply4(scale, tr);
         tr = multiply4(rx, tr);
         tr = multiply4(ry, tr);
         tr = multiply4(rz, tr);
+        tr = multiply4(move, tr);
         draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, tr, p);
     }
 
     onslide();
 
+    function onslide_s(e, ui) {
+        s = ui.value / 100;
+        onslide();
+    }
+
+    function onslide_p(e, ui) {
+        p = ui.value / 10;
+        onslide();
+    }
+
+    function onslide_x(e, ui) {
+        x = Math.PI * ui.value / 50;
+        onslide();
+    }
+
+    function onslide_y(e, ui) {
+        y = Math.PI * ui.value / 50;
+        onslide();
+    }
+
+    function onslide_z(e, ui) {
+        z = Math.PI * ui.value / 50;
+        onslide();
+    }
+
+    function onslide_h(e, ui) {
+        h = ui.value / 50 - 1;
+        onslide();
+    }
+
+    function onslide_v(e, ui) {
+        v = ui.value / 50 - 1;
+        onslide();
+    }
+
     $("#sslider").slider({
         value: 50,
-        slide: function(e, ui) {
-            s = ui.value / 100;
-            onslide();
-        },
-        stop: function(e, ui) {
-            s = ui.value / 100;
-            onslide();
-        }
+        slide: onslide_s,
+        stop: onslide_s,
     });
 
     $("#pslider").slider({
         value: 50,
-        slide: function(e, ui) {
-            p = ui.value / 10;
-            onslide();
-        },
-        stop: function(e, ui) {
-            p = ui.value / 10;
-            onslide();
-        }
+        slide: onslide_p,
+        stop: onslide_p,
     });
 
     $("#xslider").slider({
         value: 20,
-        slide: function(e, ui) {
-            x = Math.PI * ui.value / 50;
-            onslide();
-        },
-        stop: function(e, ui) {
-            x = Math.PI * ui.value / 50;
-            onslide();
-        }
+        slide: onslide_x,
+        stop: onslide_x,
     });
 
     $("#yslider").slider({
         value: 10,
-        slide: function(e, ui) {
-            y = Math.PI * ui.value / 50;
-            onslide();
-        },
-        stop: function(e, ui) {
-            y = Math.PI * ui.value / 50;
-            onslide();
-        }
+        slide: onslide_y,
+        stop: onslide_y,
     });
 
     $("#zslider").slider({
-        slide: function(e, ui) {
-            z = Math.PI * ui.value / 50;
-            onslide();
-        },
-        stop: function(e, ui) {
-            z = Math.PI * ui.value / 50;
-            onslide();
-        }
+        slide: onslide_z,
+        stop: onslide_z,
+    });
+
+    $("#hslider").slider({
+        value: 50,
+        slide: onslide_h,
+        stop: onslide_h,
+    });
+
+    $("#vslider").slider({
+        value: 50,
+        slide: onslide_v,
+        stop: onslide_v,
     });
 }
