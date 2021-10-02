@@ -1,5 +1,5 @@
 function createShader(gl, type, source) {
-    let shader = gl.createShader(type);
+    const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
@@ -13,7 +13,7 @@ function createShader(gl, type, source) {
 }
 
 function createProgram(gl, vertexShader, fragmentShader) {
-    let program = gl.createProgram();
+    const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
@@ -25,14 +25,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
     }
 
     return program;
-}
-
-function draw(gl, transformLocation, pointSizeLocation, matrix, pointSize) {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.uniformMatrix4fv(transformLocation, false, matrix);
-    gl.uniform1f(pointSizeLocation, pointSize);
-    gl.drawArrays(gl.LINES, 0, 24);
-    gl.drawArrays(gl.POINTS, 24, 15 * 32 + 2);
 }
 
 function cube() {
@@ -56,10 +48,10 @@ function sphere() {
     const res = 32;
     const half = res / 2;
     const size = (half - 1) * res + 2;
-    let ret = Array(size * 3);
+    const ret = Array(size * 3);
     for (let i = 0; i < res; ++i)
         for (let j = 1; j < half; ++j) {
-            let r = Math.sin(Math.PI * j / half);
+            const r = Math.sin(Math.PI * j / half);
             ret[((half - 1) * i + j - 1) * 3 + 0] = Math.cos(Math.PI * i / half) * r;
             ret[((half - 1) * i + j - 1) * 3 + 1] = Math.sin(Math.PI * i / half) * r;
             ret[((half - 1) * i + j - 1) * 3 + 2] = Math.cos(Math.PI * j / half);
@@ -83,7 +75,7 @@ function id4() {
 }
 
 function multiply4(a, b) {
-    let ret = Array(4 * 4);
+    const ret = Array(4 * 4);
     for (let i = 0; i < 4; ++i)
         for (let j = 0; j < 4; ++j) {
             let v = 0;
@@ -95,38 +87,40 @@ function multiply4(a, b) {
 }
 
 window.onload =  function() {
-    let canvas = document.querySelector("#c");
-    let gl = canvas.getContext("webgl");
+    const canvas = document.querySelector("#c");
+    const gl = canvas.getContext("webgl");
     if (!gl) {
         alert("No WebGL");
         return;
     }
 
-    // Create program.
-    let vertexShaderSource = document.querySelector("#vertex-shader-3d").text;
-    let fragmentShaderSource = document.querySelector("#fragment-shader-3d").text;
-    let vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    let program = createProgram(gl, vertexShader, fragmentShader);
+    // Create a program.
+    const vertexShaderSource = document.querySelector("#vertex-shader-3d").text;
+    const fragmentShaderSource = document.querySelector("#fragment-shader-3d").text;
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const program = createProgram(gl, vertexShader, fragmentShader);
     gl.useProgram(program);
 
-    // Create a buffer to store verticies.
-    // This is required before using ARRAY_BUFFER and a_position.
-    let positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    // Create a buffer to store verticies of a cube, and transfer verticies
+    // of a cube to pointBuffer bound ARRAY_BURRER.
+    const cubeBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube()), gl.STATIC_DRAW);
 
-    // Transfer verticies of shapes.
-    let position = cube().concat(sphere());
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+    // Create a buffer to store vertices of a sphere, and transfer verticies
+    // of a sphere to pointBuffer bound ARRAY_BURRER.
+    const sphereBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere()), gl.STATIC_DRAW);
 
     // Get a location of an attribute to pass verticies.
-    let positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
 
     // Get locations of uniforms.
-    let transformLocation = gl.getUniformLocation(program, "u_transform");
-    let pointSizeLocation = gl.getUniformLocation(program, "u_pointSize");
+    const transformLocation = gl.getUniformLocation(program, "u_transform");
+    const pointSizeLocation = gl.getUniformLocation(program, "u_pointSize");
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
@@ -138,32 +132,49 @@ window.onload =  function() {
     let z = 0;
     let h = 0;
     let v = 0;
+
+    function draw(matrix, pointSize) {
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniformMatrix4fv(transformLocation, false, matrix);
+        gl.uniform1f(pointSizeLocation, pointSize);
+
+        // Draw a cube.
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
+        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
+        gl.drawArrays(gl.LINES, 0, 24);
+
+        // Draw a sphere.
+        gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuffer);
+        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
+        gl.drawArrays(gl.POINTS, 0, 15 * 32 + 2);
+    }
+
     function onslide() {
-        let scale = [
+        const scale = [
             s, 0, 0, 0,
             0, s, 0, 0,
             0, 0, s, 0,
             0, 0, 0, 1,
         ];
-        let rx = [
+        const rx = [
             1, 0, 0, 0,
             0, Math.cos(x), Math.sin(x), 0,
             0, -Math.sin(x), Math.cos(x), 0,
             0, 0, 0, 1,
         ];
-        let ry = [
+        const ry = [
             Math.cos(y), 0, -Math.sin(y), 0,
             0, 1, 0, 0,
             Math.sin(y), 0, Math.cos(y), 0,
             0, 0, 0, 1,
         ];
-        let rz = [
+        const rz = [
             Math.cos(z), Math.sin(z), 0, 0,
             -Math.sin(z), Math.cos(z), 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
         ];
-        let move = [
+        const move = [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -175,7 +186,7 @@ window.onload =  function() {
         tr = multiply4(ry, tr);
         tr = multiply4(rz, tr);
         tr = multiply4(move, tr);
-        draw(gl, transformLocation, pointSizeLocation, tr, p);
+        draw(tr, p);
     }
 
     onslide();
