@@ -27,9 +27,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
     return program;
 }
 
-function draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, matrix, pointSize) {
+function draw(gl, transformLocation, pointSizeLocation, matrix, pointSize) {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
     gl.uniformMatrix4fv(transformLocation, false, matrix);
     gl.uniform1f(pointSizeLocation, pointSize);
     gl.drawArrays(gl.LINES, 0, 24);
@@ -103,27 +102,34 @@ window.onload =  function() {
         return;
     }
 
+    // Create program.
     let vertexShaderSource = document.querySelector("#vertex-shader-3d").text;
     let fragmentShaderSource = document.querySelector("#fragment-shader-3d").text;
-
     let vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
     let program = createProgram(gl, vertexShader, fragmentShader);
+    gl.useProgram(program);
 
-    let positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    let transformLocation = gl.getUniformLocation(program, "u_transform");
-    let pointSizeLocation = gl.getUniformLocation(program, "u_pointSize");
-
+    // Create a buffer to store verticies.
+    // This is required before using ARRAY_BUFFER and a_position.
     let positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
+    // Transfer verticies of shapes.
     let position = cube().concat(sphere());
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+
+    // Get a location of an attribute to pass verticies.
+    let positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
+
+    // Get locations of uniforms.
+    let transformLocation = gl.getUniformLocation(program, "u_transform");
+    let pointSizeLocation = gl.getUniformLocation(program, "u_pointSize");
+
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
-    gl.useProgram(program);
-    gl.enableVertexAttribArray(positionAttributeLocation);
 
     let s = 0.5;
     let p = 5;
@@ -169,7 +175,7 @@ window.onload =  function() {
         tr = multiply4(ry, tr);
         tr = multiply4(rz, tr);
         tr = multiply4(move, tr);
-        draw(gl, positionAttributeLocation, transformLocation, pointSizeLocation, tr, p);
+        draw(gl, transformLocation, pointSizeLocation, tr, p);
     }
 
     onslide();
