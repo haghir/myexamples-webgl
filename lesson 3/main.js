@@ -122,8 +122,12 @@ window.onload =  function() {
     const transformLocation = gl.getUniformLocation(program, "u_transform");
     const pointSizeLocation = gl.getUniformLocation(program, "u_pointSize");
 
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.lineWidth(5);
     gl.clearColor(0, 0, 0, 1);
+    gl.clearDepth(1.0);
 
     let s = 0.5;
     let p = 5;
@@ -134,7 +138,7 @@ window.onload =  function() {
     let v = 0;
 
     function draw(matrix, pointSize) {
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.uniformMatrix4fv(transformLocation, false, matrix);
         gl.uniform1f(pointSizeLocation, pointSize);
 

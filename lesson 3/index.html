@@ -35,9 +35,9 @@
   varying vec4 v_color;
 
   void main() {
-    gl_Position = u_transform * vec4(a_position, 1);
+    gl_Position = u_transform * vec4(a_position, 1.0);
     gl_PointSize = u_pointSize;
-    v_color = vec4(a_position * 0.5 + 0.5, 1);
+    v_color = vec4(a_position + 1.0, gl_Position.z + 1.0) * 0.5;
   }
   </script>
   <script id="fragment-shader-3d" type="x-shader/x-fragment">

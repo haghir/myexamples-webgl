@@ -135,6 +135,7 @@ window.onload =  function() {
     gl.enable(gl.DEPTH_TEST);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
+    gl.clearDepth(1.0);
 
     let s = 0.5;
     let x = Math.PI * 20 / 50;
