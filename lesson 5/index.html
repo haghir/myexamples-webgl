@@ -441,7 +441,13 @@
 
   void main() {
     vec4 color = texture2D(u_texture, v_texcoord);
-    gl_FragColor = vec4(color.rgb, color.a * u_alpha);
+    color.a *= u_alpha;
+
+    // At least, prevent drawing color whose alpha is zero.
+    if (color.a == 0.0)
+      discard;
+
+      gl_FragColor = color;
   }
   </script>
   <script src="../common/jquery-3.6.0.min.js"></script>
