@@ -96,6 +96,7 @@ window.onload =  function() {
     const cloudImage = document.getElementById("texCloud");
     const cloudTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, cloudTexture);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cloudImage);
     gl.generateMipmap(gl.TEXTURE_2D);
 
@@ -103,6 +104,7 @@ window.onload =  function() {
     const sunImage = document.getElementById("texSun");
     const sunTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, sunTexture);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sunImage);
     gl.generateMipmap(gl.TEXTURE_2D);
 
@@ -131,7 +133,7 @@ window.onload =  function() {
     gl.enable(gl.BLEND);
 
     gl.depthFunc(gl.LEQUAL);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
