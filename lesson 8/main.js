@@ -72,6 +72,19 @@ function id4() {
     ];
 }
 
+function det(m) {
+    //  0:11  1:21  2:31  3:41
+    //  4:12  5:22  6:32  7:42
+    //  8:13  9:23 10:33 11:43
+    // 12:14 13:24 14:34 15:44
+    return m[0] * m[5] * m[10]
+         + m[4] * m[9] * m[ 2]
+         + m[8] * m[1] * m[ 6]
+         - m[0] * m[9] * m[ 6]
+         - m[4] * m[1] * m[10]
+         - m[8] * m[5] * m[ 2];
+}
+
 function multiply4(a, b) {
     const ret = Array(4 * 4);
     for (let i = 0; i < 4; ++i)
@@ -155,6 +168,8 @@ window.onload =  function() {
         return multiply4(resize, matrix);
     }
 
+    const detElem = document.getElementById("det");
+
     function draw() {
         // Resize canvas.
         const canvasWidth = document.documentElement.clientWidth;
@@ -177,6 +192,8 @@ window.onload =  function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
         gl.vertexAttribPointer(texcoordAttributeLocation, 2, gl.FLOAT,  false, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6 * 2 * 3);
+
+        detElem.textContent = det(matrix);
     }
 
     let dragging = false;
