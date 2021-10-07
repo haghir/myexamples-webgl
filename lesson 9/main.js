@@ -27,6 +27,31 @@ function createProgram(gl, vertexShader, fragmentShader) {
     return program;
 }
 
+function generateProgram(gl, vertexShaderId, fragmentShaderId) {
+    const vertexShaderSource = document.getElementById(vertexShaderId).text;
+    const fragmentShaderSource = document.getElementById(fragmentShaderId).text;
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    return createProgram(gl, vertexShader, fragmentShader);
+}
+
+function frame() {
+    return [
+        -1, -1, -1,  1, -1, -1,
+         1,  1, -1,  1, -1, -1,
+         1,  1, -1, -1,  1, -1,
+        -1, -1, -1, -1,  1, -1,
+         1, -1,  1, -1, -1,  1,
+         1,  1,  1,  1, -1,  1,
+         1,  1,  1, -1,  1,  1,
+        -1,  1,  1, -1, -1,  1,
+        -1, -1, -1, -1, -1,  1,
+         1, -1,  1,  1, -1, -1,
+         1,  1,  1,  1,  1, -1,
+        -1,  1,  1, -1,  1, -1,
+    ];
+}
+
 function cube() {
     return [
         -1,  1, -1,  1, -1, -1,  1,  1, -1,
@@ -105,23 +130,20 @@ window.onload =  function() {
         return;
     }
 
-    // Create a program.
-    const vertexShaderSource = document.querySelector("#vertex-shader-3d").text;
-    const fragmentShaderSource = document.querySelector("#fragment-shader-3d").text;
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const program = createProgram(gl, vertexShader, fragmentShader);
-    gl.useProgram(program);
+    // Create a buffer to store texture coordinates, and transfer.
+    const texcoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(faces()), gl.STATIC_DRAW);
 
     // Create a buffer to store verticies, and transfer verticies of a cube.
     const cubeBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube()), gl.STATIC_DRAW);
-    
-    // Create a buffer to store texture coordinates, and transfer.
-    const texcoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(faces()), gl.STATIC_DRAW);
+
+    // Create a buffer to store verticies, and transfer verticies of a frame.
+    const frameBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, frameBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(frame()), gl.STATIC_DRAW);
 
     // Create a texture.
     const image = document.getElementById("texImage");
@@ -130,19 +152,39 @@ window.onload =  function() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
     gl.generateMipmap(gl.TEXTURE_2D);
 
+    // Create a program 1.
+    const program1 = generateProgram(gl, "vertex-shader-3d-1", "fragment-shader-3d-1");
+
     // Get a location of an attribute to pass verticies.
-    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(positionAttributeLocation);
-
-    // Get a location of an attribute to pass coordinates of a texture.
-    const texcoordAttributeLocation = gl.getAttribLocation(program, "a_texcoord");
-    gl.enableVertexAttribArray(texcoordAttributeLocation);
-
-    // Get a location of texture.
-    const textureLocation = gl.getUniformLocation(program, "u_texture");
+    const positionAttributeLocation1 = gl.getAttribLocation(program1, "a_position");
+    gl.enableVertexAttribArray(positionAttributeLocation1);
+    gl.vertexAttribPointer(positionAttributeLocation1, 3, gl.FLOAT,  false, 0, 0);
 
     // Get locations of transform.
-    const transformLocation = gl.getUniformLocation(program, "u_transform");
+    const transformLocation1 = gl.getUniformLocation(program1, "u_transform");
+
+    // Create a program 2.
+    const program2 = generateProgram(gl, "vertex-shader-3d-2", "fragment-shader-3d-2");
+
+    // Get a location of an attribute to pass verticies.
+    const positionAttributeLocation2 = gl.getAttribLocation(program2, "a_position");
+    gl.enableVertexAttribArray(positionAttributeLocation2);
+    gl.vertexAttribPointer(positionAttributeLocation2, 3, gl.FLOAT,  false, 0, 0);
+
+    // Get a location of an attribute to pass coordinates of a texture.
+    // If gl.vertexAttribPointer(texcoordAttributeLocation2, ...) was not called
+    // before gl.drawArrays(gl.LINES, ...) was called, it will fail.
+    // I'm not sure why, but I added lines that calls vertexAttribPointer after
+    // each line where enableVertexAttribArray is called.
+    const texcoordAttributeLocation2 = gl.getAttribLocation(program2, "a_texcoord");
+    gl.enableVertexAttribArray(texcoordAttributeLocation2);
+    gl.vertexAttribPointer(texcoordAttributeLocation2, 2, gl.FLOAT,  false, 0, 0);
+
+    // Get a location of texture.
+    const textureLocation2 = gl.getUniformLocation(program2, "u_texture");
+
+    // Get locations of transform.
+    const transformLocation2 = gl.getUniformLocation(program2, "u_transform");
 
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
@@ -150,12 +192,21 @@ window.onload =  function() {
     gl.clearColor(0, 0, 0, 1);
     gl.clearDepth(1.0);
 
-    let matrix = [
+    const scale1 = [
         0.5,   0,   0, 0,
           0, 0.5,   0, 0,
           0,   0, 0.5, 0,
           0,   0,   0, 1,
     ];
+
+    const scale2 = [
+        0.4,   0,   0, 0,
+          0, 0.4,   0, 0,
+          0,   0, 0.4, 0,
+          0,   0,   0, 1,
+    ];
+
+    let matrix = id4();
 
     function prjview(matrix, width, height) {
         const smaller = Math.min(width, height);
@@ -180,19 +231,32 @@ window.onload =  function() {
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         }
 
-        const tr = prjview(matrix, canvasWidth, canvasHeight);
-
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.uniformMatrix4fv(transformLocation, false, tr);
-        gl.uniform1i(textureLocation, 0);
+
+        // Draw a frame.
+        let tr1 = multiply4(matrix, scale1);
+        tr1 = prjview(tr1, canvasWidth, canvasHeight);
+
+        gl.useProgram(program1);
+        gl.uniformMatrix4fv(transformLocation1, false, tr1);
+        gl.bindBuffer(gl.ARRAY_BUFFER, frameBuffer);
+        gl.vertexAttribPointer(positionAttributeLocation1, 3, gl.FLOAT,  false, 0, 0);
+        gl.drawArrays(gl.LINES, 0, 12 * 2);
 
         // Draw a cube.
+        let tr2 = multiply4(matrix, scale2);
+        tr2 = prjview(tr2, canvasWidth, canvasHeight);
+
+        gl.useProgram(program2);
+        gl.uniformMatrix4fv(transformLocation2, false, tr2);
+        gl.uniform1i(textureLocation2, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
-        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT,  false, 0, 0);
+        gl.vertexAttribPointer(positionAttributeLocation2, 3, gl.FLOAT,  false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-        gl.vertexAttribPointer(texcoordAttributeLocation, 2, gl.FLOAT,  false, 0, 0);
+        gl.vertexAttribPointer(texcoordAttributeLocation2, 2, gl.FLOAT,  false, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6 * 2 * 3);
 
+        // Show the determinant of the matrix.
         detElem.textContent = det(matrix);
     }
 
