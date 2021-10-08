@@ -122,6 +122,73 @@ function multiply4(a, b) {
     return ret;
 }
 
+function correct(m) {
+    function round(value, threshold) {
+        if (value < -threshold)
+            return -threshold;
+        else if (value > threshold)
+            return threshold;
+        else
+            return value;
+    }
+
+    let sinx = 0;
+    let cosx = 0;
+    let siny = round(-m[2], 1);
+    let cosy = Math.sqrt(1 - siny * siny);
+    let sinz = 0;
+    let cosz = 0;
+
+    function correct1() {
+        const sign = Math.sign(siny);
+        const xz1 = Math.asin(-m[4]);
+        const xz2 = Math.acos(-m[5]);
+        const x = sign * (xz1 - xz2) / 2;
+        const z = (xz1 + xz2) / 2;
+        sinx = Math.sin(x);
+        cosx = Math.cos(x);
+        sinz = Math.sin(z);
+        cosz = Math.cos(z);
+    }
+
+    function correct2() {
+        cosz = round(m[0] / cosy, 1);
+        sinz = Math.sign(m[1] / cosy);
+        sinz *= Math.sqrt(1 - cosz * cosz);
+        sinx = round(m[6] / cosy, 1);
+        cosx = Math.sign(m[10] / cosy);
+        cosx *= Math.sqrt(1 - sinx * sinx);
+    }
+
+    if (cosy < 0.000000001)
+        correct1();
+    else
+        correct2();
+
+    const rx = [
+        1,     0,    0, 0,
+        0,  cosx, sinx, 0,
+        0, -sinx, cosx, 0,
+        0,     0,    0, 1,
+    ];
+
+    const ry = [
+        cosy, 0, -siny, 0,
+           0, 1,     0, 0,
+        siny, 0,  cosy, 0,
+           0, 0,     0, 1,
+    ];
+
+    const rz = [
+         cosz, sinz, 0, 0,
+        -sinz, cosz, 0, 0,
+            0,    0, 1, 0,
+            0,    0, 0, 1,
+    ];
+
+    return multiply4(rz, multiply4(ry, rx));
+}
+
 window.onload =  function() {
     const canvas = document.querySelector("#c");
     const gl = canvas.getContext("webgl");
@@ -305,6 +372,8 @@ window.onload =  function() {
               0,  0, 1, 0,
               0,  0, 0, 1,
         ], matrix);
+
+        matrix = correct(matrix);
 
         startX = e.offsetX;
         startY = e.offsetY;
