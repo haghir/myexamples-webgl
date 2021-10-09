@@ -114,25 +114,27 @@ function correct(m) {
     let sinz = 0;
     let cosz = 0;
 
+    // If cosy == 0
     function correct1() {
-        const sign = Math.sign(siny);
-        const xz1 = Math.asin(-m[4]);
-        const xz2 = Math.acos(-m[5]);
-        const x = sign * (xz1 - xz2) / 2;
-        const z = (xz1 + xz2) / 2;
+        const asin4 = Math.asin(-m[4]);
+        const acos5 = Math.acos(m[5]);
+        const x = Math.sign(siny) * (acos5 - asin4) / 2;
+        const z = (acos5 + asin4) / 2;
         sinx = Math.sin(x);
         cosx = Math.cos(x);
         sinz = Math.sin(z);
         cosz = Math.cos(z);
     }
 
+    // If cosy != 0
     function correct2() {
-        cosz = round(m[0] / cosy, 1);
-        sinz = Math.sign(m[1] / cosy);
-        sinz *= Math.sqrt(1 - cosz * cosz);
         sinx = round(m[6] / cosy, 1);
         cosx = Math.sign(m[10] / cosy);
         cosx *= Math.sqrt(1 - sinx * sinx);
+
+        sinz = round(m[1] / cosy, 1)
+        cosz = Math.sign(m[0] / cosy);
+        cosz *= Math.sqrt(1 - sinz * sinz);
     }
 
     if (cosy < 0.000000001)
@@ -266,22 +268,9 @@ window.onload =  function() {
         detElem.textContent = det(matrix);
     }
 
-    let dragging = false;
-    let startX;
-    let startY;
-    canvas.addEventListener("mousedown", e => {
-        startX = e.offsetX;
-        startY = e.offsetY;
-        dragging = true;
-    });
-
-    canvas.addEventListener("mousemove", e => {
-        if (!dragging)
-            return;
-        const dx =  e.offsetX - startX;
-        const dy = -e.offsetY + startY;
+    function rotate(dx, dy) {
         if (dx == 0 && dy == 0)
-            return;
+            return false;
         const d = Math.sqrt(dx * dx + dy * dy);
         const ex = dx / d;
         const ey = dy / d;
@@ -314,15 +303,47 @@ window.onload =  function() {
 
         matrix = correct(matrix);
 
+        draw();
+
+        return true;
+    }
+
+    let dragging = false;
+    let startX;
+    let startY;
+    canvas.addEventListener("mousedown", e => {
         startX = e.offsetX;
         startY = e.offsetY;
+        dragging = true;
+    });
 
-        draw();
+    canvas.addEventListener("mousemove", e => {
+        if (!dragging)
+            return;
+        const dx =  e.offsetX - startX;
+        const dy = -e.offsetY + startY;
+        if (!rotate(dx, dy))
+            return;
+        startX = e.offsetX;
+        startY = e.offsetY;
     });
 
     window.addEventListener("mouseup", e => {
         dragging = false;
         draw();
+    });
+
+    window.addEventListener("keydown", e => {
+        if (e.code == "ArrowUp")
+            rotate(0, 10);
+        else if (e.code == "ArrowDown")
+            rotate(0, -10);
+        else if (e.code == "ArrowLeft")
+            rotate(-10, 0);
+        else if (e.code == "ArrowRight")
+            rotate(10, 0);
+        else
+            return;
     });
 
     window.onresize = function() {
