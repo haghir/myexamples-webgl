@@ -235,6 +235,9 @@ window.onload =  function() {
     let dax = 0;
     let day = 0;
     let daz = 0;
+    let dstax = 0;
+    let dstay = 0;
+    let dstaz = 0;
 
     const start = Date.now();
     let fpsStart = start;
@@ -316,7 +319,7 @@ window.onload =  function() {
         azElem.textContent = az;
     }
 
-    function correct(m) {
+    function calcAngles(m) {
         function round(value, threshold) {
             if (value < -threshold)
                 return -threshold;
@@ -335,31 +338,23 @@ window.onload =  function() {
         ay = Math.asin(siny);
         const cosy = Math.abs(Math.cos(ay));
 
-        // If cosy == 0
-        function correct1() {
+        if (cosy < 0.000000001) {
             const asin4 = Math.asin(-m[4]);
             const acos5 = Math.acos(m[5]);
             ax = ay * (acos5 - asin4) / 2;
             az = (acos5 + asin4) / 2;
-        }
-    
-        // If cosy != 0
-        function correct2() {
+        } else {
             const signx = sign(m[6] / cosy);
             ax = signx * Math.acos(round(m[10] / cosy, 1));
             const signz = sign(m[1] / cosy);
             az = signz * Math.acos(round(m[0] / cosy, 1));
         }
-    
-        if (cosy < 0.000000001)
-            correct1();
-        else
-            correct2();
     }
 
     function rotate(dx, dy) {
         if (dx == 0 && dy == 0)
             return false;
+
         const d = Math.sqrt(dx * dx + dy * dy);
         const ex = dx / d;
         const ey = dy / d;
@@ -392,7 +387,7 @@ window.onload =  function() {
               0,  0, 0, 1,
         ], matrix);
 
-        correct(matrix);
+        calcAngles(matrix);
 
         return true;
     }
@@ -436,54 +431,79 @@ window.onload =  function() {
 
     rxpElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (0 - ax) / autoRotationCount;
-        day = (Math.PI / 2 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = 0;
+        dstay = Math.PI / 2;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     rxnElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (0 - ax) / autoRotationCount;
-        day = (-Math.PI / 2 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = 0;
+        dstay = -Math.PI / 2;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     rypElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (-Math.PI / 2 - ax) / autoRotationCount;
-        day = (0 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = -Math.PI / 2;
+        dstay = 0;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     rynElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (Math.PI / 2 - ax) / autoRotationCount;
-        day = (0 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = Math.PI / 2;
+        dstay = 0;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     rzpElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (Math.PI - az - ax) / autoRotationCount;
-        day = (0 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = Math.PI;
+        dstay = 0;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     rznElem.addEventListener("click", e => {
         autoRotationCount = fps;
-        dax = (0 - ax) / autoRotationCount;
-        day = (0 - ay) / autoRotationCount;
-        daz = (0 - az) / autoRotationCount;
+        dstax = 0;
+        dstay = 0;
+        dstaz = 0;
+        dax = (dstax - ax) / autoRotationCount;
+        day = (dstay - ay) / autoRotationCount;
+        daz = (dstaz - az) / autoRotationCount;
     });
 
     function autoRotation() {
-        if (autoRotationCount == 0)
+        if (autoRotationCount == null)
             return;
+
+        if (autoRotationCount == 0) {
+            ax = dstax;
+            ay = dstay;
+            az = dstaz;
+            autoRotationCount = null;
+            return;
+        }
 
         ax += dax;
         ay += day;
         az += daz;
-
         --autoRotationCount;
     }
 
